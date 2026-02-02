@@ -1,12 +1,15 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
+
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production=false
+# Install all dependencies (including dev for build)
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -14,8 +17,9 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
-# Remove dev dependencies after build
+# Remove dev dependencies and build tools
 RUN npm prune --production
+RUN apk del python3 make g++
 
 # Expose port
 EXPOSE 3001
