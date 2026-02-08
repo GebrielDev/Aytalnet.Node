@@ -13,12 +13,14 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.aytalnet.fleetdriver",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to take photos of odometer and selfie.",
         "NSLocationWhenInUseUsageDescription": "This app uses your location to track trips."
       }
     },
     "android": {
+      "package": "com.aytalnet.fleetdriver",
       "adaptiveIcon": {
         "backgroundColor": "#2563EB"
       },
