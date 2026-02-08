@@ -1,11 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 
-// Use environment variable or default to production URL
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 
-  process.env.EXPO_PUBLIC_API_URL || 
-  'https://aytalnet-production.up.railway.app/api';
+// Production API URL - override via EXPO_PUBLIC_API_URL env var at build time
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://aytalnet-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
