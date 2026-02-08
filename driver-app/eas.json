@@ -3,6 +3,13 @@
     "version": ">= 5.0.0"
   },
   "build": {
+    "dev": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://aytalnet-production.up.railway.app/api"
+      }
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal"
