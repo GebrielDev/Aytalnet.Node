@@ -9,7 +9,6 @@ const BACKEND_URL = API_URL.replace(/\/api\/?$/, '');
 function resolvePhotoUrl(url: string): string {
   if (!url) return '';
   if (url.startsWith('http') || url.startsWith('data:')) return url;
-  // Relative path like "uploads/123-photo.jpg" -> full backend URL
   return `${BACKEND_URL}/${url}`;
 }
 
@@ -154,7 +153,20 @@ export default function Trips() {
                 <div className="grid grid-cols-2 gap-2">
                   {selectedTrip.photos.map((photo) => (
                     <div key={photo.id} className="border rounded p-2">
-                      <img src={resolvePhotoUrl(photo.photoUrl)} alt={photo.photoType} className="w-full h-32 object-cover rounded" />
+                      <img
+                        src={resolvePhotoUrl(photo.photoUrl)}
+                        alt={photo.photoType}
+                        className="w-full h-32 object-cover rounded"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.style.display = 'none';
+                          target.parentElement!.insertAdjacentHTML(
+                            'afterbegin',
+                            '<div class="w-full h-32 bg-gray-100 rounded flex items-center justify-center text-gray-400 text-sm">Photo unavailable</div>'
+                          );
+                        }}
+                      />
                       <p className="text-sm text-gray-500 mt-1">{photo.photoType.replace('_', ' ')}</p>
                     </div>
                   ))}
