@@ -45,6 +45,9 @@ export default function ActiveTripScreen() {
       <View style={styles.infoCard}>
         <Text style={styles.infoLabel}>Vehicle</Text>
         <Text style={styles.infoValue}>{trip.vehicle?.plateNumber || 'N/A'}</Text>
+        {trip.vehicle?.make && (
+          <Text style={styles.infoSub}>{trip.vehicle.make} {trip.vehicle.model}</Text>
+        )}
       </View>
 
       <View style={styles.durationCard}>
@@ -77,6 +80,7 @@ const styles = StyleSheet.create({
   infoCard: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5, elevation: 2 },
   infoLabel: { fontSize: 14, color: '#6b7280', marginBottom: 5 },
   infoValue: { fontSize: 18, fontWeight: '600', color: '#1f2937' },
+  infoSub: { fontSize: 14, color: '#6b7280', marginTop: 2 },
   durationCard: { backgroundColor: '#2563eb', padding: 25, borderRadius: 12, marginBottom: 15, alignItems: 'center' },
   durationLabel: { fontSize: 16, color: '#93c5fd', marginBottom: 5 },
   durationValue: { fontSize: 42, fontWeight: 'bold', color: '#fff' },

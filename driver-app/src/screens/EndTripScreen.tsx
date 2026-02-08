@@ -76,8 +76,14 @@ export default function EndTripScreen() {
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Vehicle:</Text>
-          <Text style={styles.summaryValue}>{trip.vehicle?.plateNumber}</Text>
+          <Text style={styles.summaryValue}>{trip.vehicle?.plateNumber || 'N/A'}</Text>
         </View>
+        {trip.vehicle?.make && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Make/Model:</Text>
+            <Text style={styles.summaryValue}>{trip.vehicle.make} {trip.vehicle.model}</Text>
+          </View>
+        )}
       </View>
 
       <Text style={styles.sectionTitle}>End Odometer Reading *</Text>

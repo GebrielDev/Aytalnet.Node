@@ -107,18 +107,19 @@ export const startTrip = async (req: Request, res: Response): Promise<void> => {
       startAddress,
     });
 
+    const fullTrip = await Trip.findByPk(trip.id, {
+      include: [
+        { model: Driver, as: 'driver', attributes: ['id', 'name', 'employeeId'] },
+        { model: Vehicle, as: 'vehicle', attributes: ['id', 'plateNumber', 'make', 'model'] },
+      ],
+    });
+
     const io = req.app.get('io');
     if (io) {
-      const fullTrip = await Trip.findByPk(trip.id, {
-        include: [
-          { model: Driver, as: 'driver', attributes: ['id', 'name', 'employeeId'] },
-          { model: Vehicle, as: 'vehicle', attributes: ['id', 'plateNumber', 'make', 'model'] },
-        ],
-      });
       io.emit('trip:started', fullTrip);
     }
 
-    res.status(201).json(trip);
+    res.status(201).json(fullTrip);
   } catch (error) {
     res.status(500).json({ error: 'Failed to start trip' });
   }
