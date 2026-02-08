@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { tripsApi } from '../services/api';
@@ -13,12 +13,15 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     try {
-      const [activeRes, tripsRes] = await Promise.all([
-        tripsApi.getActiveTrip().catch(() => ({ data: null })),
-        tripsApi.getMyTrips().catch(() => ({ data: [] })),
-      ]);
-      setActiveTrip(activeRes.data);
-      setRecentTrips(tripsRes.data || []);
+      setLoading(true);
+      let active = null;
+      let trips: any[] = [];
+      try { const r = await tripsApi.getActiveTrip(); active = r.data; } catch (e) { /* no active trip */ }
+      try { const r = await tripsApi.getMyTrips(); trips = Array.isArray(r.data) ? r.data : []; } catch (e) { /* endpoint may not exist yet */ }
+      setActiveTrip(active);
+      setRecentTrips(trips);
+    } catch (e) {
+      // never crash
     } finally {
       setLoading(false);
     }
@@ -37,119 +40,131 @@ export default function HomeScreen() {
     ]);
   };
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const fmtDate = (d: string) => {
+    try { return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return '-'; }
   };
-
-  const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const fmtTime = (d: string) => {
+    try { return new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); } catch { return '-'; }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.center}>
         <ActivityIndicator size="large" color="#2563eb" />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hello, {driver?.name}</Text>
-        <Text style={styles.employeeId}>ID: {driver?.employeeId}</Text>
+        <View>
+          <Text style={styles.greeting}>Hello, {driver?.name || 'Driver'}</Text>
+          <Text style={styles.sub}>ID: {driver?.employeeId || '\u2014'}</Text>
+        </View>
+        <TouchableOpacity onPress={handleLogout}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
       </View>
 
-      {activeTrip ? (
-        <View style={styles.activeTripCard}>
-          <Text style={styles.activeTripTitle}>Active Trip</Text>
-          <Text style={styles.activeTripInfo}>Vehicle: {activeTrip.vehicle?.plateNumber}</Text>
-          <Text style={styles.activeTripInfo}>Started: {new Date(activeTrip.startTime).toLocaleTimeString()}</Text>
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={() => navigation.navigate('ActiveTrip', { trip: activeTrip })}
-          >
-            <Text style={styles.buttonText}>Continue Trip</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
+      {/* Active trip banner */}
+      {activeTrip && (
         <TouchableOpacity
-          style={styles.startButton}
-          onPress={() => navigation.navigate('StartTrip')}
+          style={styles.activeBanner}
+          onPress={() => navigation.navigate('ActiveTrip', { trip: activeTrip })}
         >
-          <Text style={styles.startButtonText}>Start New Trip</Text>
+          <View style={styles.activeDot} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.activeTitle}>Trip in Progress</Text>
+            <Text style={styles.activeSub}>{activeTrip.vehicle?.plateNumber || 'Vehicle'} \u2014 started {fmtTime(activeTrip.startTime)}</Text>
+          </View>
+          <Text style={styles.activeArrow}>{'\u203A'}</Text>
         </TouchableOpacity>
       )}
 
-      <View style={styles.historySection}>
-        <Text style={styles.historyTitle}>Recent Trips</Text>
+      {/* New Trip button \u2014 always visible at top */}
+      <TouchableOpacity
+        style={[styles.newTripBtn, activeTrip && styles.newTripBtnDisabled]}
+        onPress={() => { if (!activeTrip) navigation.navigate('StartTrip'); else Alert.alert('Active Trip', 'Please end your current trip first.'); }}
+      >
+        <Text style={styles.newTripBtnText}>{activeTrip ? 'End Current Trip First' : '+ Start New Trip'}</Text>
+      </TouchableOpacity>
+
+      {/* Completed Trips Table */}
+      <Text style={styles.sectionTitle}>Completed Trips</Text>
+
+      <View style={styles.table}>
+        {/* Table header */}
+        <View style={[styles.tableRow, styles.tableHeaderRow]}>
+          <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1.2 }]}>Date</Text>
+          <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1 }]}>Vehicle</Text>
+          <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 0.8 }]}>Duration</Text>
+          <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 0.8, textAlign: 'right' }]}>Miles</Text>
+        </View>
+
         {recentTrips.length === 0 ? (
-          <View style={styles.emptyCard}>
+          <View style={styles.emptyRow}>
             <Text style={styles.emptyText}>No completed trips yet</Text>
           </View>
         ) : (
-          recentTrips.map((item: any) => (
-            <View key={item.id} style={styles.tripCard}>
-              <View style={styles.tripHeader}>
-                <Text style={styles.tripDate}>{formatDate(item.endTime)}</Text>
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{item.totalMileage?.toFixed(1) || '0'} mi</Text>
-                </View>
+          recentTrips.map((t: any, i: number) => (
+            <View key={t.id} style={[styles.tableRow, i % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd]}>
+              <View style={[styles.tableCell, { flex: 1.2 }]}>
+                <Text style={styles.cellPrimary}>{fmtDate(t.endTime)}</Text>
+                <Text style={styles.cellSecondary}>{fmtTime(t.startTime)} \u2013 {fmtTime(t.endTime)}</Text>
               </View>
-              <View style={styles.tripBody}>
-                <Text style={styles.tripVehicle}>
-                  {item.vehicle?.plateNumber || 'N/A'}
-                  {item.vehicle?.make ? '  \u2022  ' + item.vehicle.make + ' ' + item.vehicle.model : ''}
-                </Text>
-                <Text style={styles.tripTime}>
-                  {formatTime(item.startTime)} \u2192 {formatTime(item.endTime)}
-                  {item.durationMinutes != null ? '  (' + item.durationMinutes + ' min)' : ''}
-                </Text>
-                <Text style={styles.tripOdometer}>
-                  Odometer: {item.startOdometer} \u2192 {item.endOdometer}
-                </Text>
+              <View style={[styles.tableCell, { flex: 1 }]}>
+                <Text style={styles.cellPrimary}>{t.vehicle?.plateNumber || '\u2014'}</Text>
+                <Text style={styles.cellSecondary} numberOfLines={1}>{t.vehicle?.make ? t.vehicle.make + ' ' + t.vehicle.model : ''}</Text>
+              </View>
+              <View style={[styles.tableCell, { flex: 0.8 }]}>
+                <Text style={styles.cellPrimary}>{t.durationMinutes != null ? t.durationMinutes + ' min' : '\u2014'}</Text>
+              </View>
+              <View style={[styles.tableCell, { flex: 0.8, alignItems: 'flex-end' }]}>
+                <Text style={styles.cellPrimary}>{t.totalMileage != null ? t.totalMileage.toFixed(1) : '\u2014'}</Text>
+                <Text style={styles.cellSecondary}>{t.startOdometer}\u2192{t.endOdometer}</Text>
               </View>
             </View>
           ))
         )}
       </View>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6' },
-  scrollContent: { padding: 20, paddingBottom: 40 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { marginBottom: 25 },
-  greeting: { fontSize: 24, fontWeight: 'bold', color: '#1f2937' },
-  employeeId: { fontSize: 16, color: '#6b7280', marginTop: 4 },
-  startButton: { backgroundColor: '#2563eb', padding: 20, borderRadius: 12, alignItems: 'center' },
-  startButtonText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  activeTripCard: { backgroundColor: '#fff', padding: 20, borderRadius: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
-  activeTripTitle: { fontSize: 20, fontWeight: 'bold', color: '#059669', marginBottom: 10 },
-  activeTripInfo: { fontSize: 16, color: '#374151', marginBottom: 5 },
-  continueButton: { backgroundColor: '#059669', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 15 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  historySection: { marginTop: 30 },
-  historyTitle: { fontSize: 20, fontWeight: 'bold', color: '#1f2937', marginBottom: 15 },
-  emptyCard: { backgroundColor: '#fff', padding: 30, borderRadius: 12, alignItems: 'center' },
-  emptyText: { fontSize: 16, color: '#9ca3af' },
-  tripCard: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
-  tripHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  tripDate: { fontSize: 15, fontWeight: '700', color: '#1f2937' },
-  badge: { backgroundColor: '#dbeafe', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { fontSize: 13, fontWeight: '600', color: '#2563eb' },
-  tripBody: {},
-  tripVehicle: { fontSize: 15, fontWeight: '600', color: '#374151', marginBottom: 3 },
-  tripTime: { fontSize: 14, color: '#6b7280', marginBottom: 2 },
-  tripOdometer: { fontSize: 13, color: '#9ca3af' },
-  logoutButton: { paddingVertical: 20, alignItems: 'center' },
-  logoutText: { color: '#ef4444', fontSize: 16 },
+  scroll: { padding: 16, paddingBottom: 40 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6' },
+
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  greeting: { fontSize: 22, fontWeight: 'bold', color: '#1f2937' },
+  sub: { fontSize: 14, color: '#6b7280', marginTop: 2 },
+  logoutText: { color: '#ef4444', fontSize: 15, fontWeight: '600' },
+
+  activeBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#86efac', borderRadius: 12, padding: 14, marginBottom: 14 },
+  activeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e', marginRight: 12 },
+  activeTitle: { fontSize: 16, fontWeight: '700', color: '#166534' },
+  activeSub: { fontSize: 13, color: '#15803d', marginTop: 2 },
+  activeArrow: { fontSize: 28, color: '#22c55e', fontWeight: '300' },
+
+  newTripBtn: { backgroundColor: '#2563eb', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginBottom: 24 },
+  newTripBtnDisabled: { backgroundColor: '#93c5fd' },
+  newTripBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 10 },
+
+  table: { backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  tableRow: { flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  tableHeaderRow: { backgroundColor: '#e5e7eb' },
+  tableHeaderText: { fontSize: 12, fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 },
+  tableRowEven: { backgroundColor: '#fff' },
+  tableRowOdd: { backgroundColor: '#f9fafb' },
+  tableCell: { justifyContent: 'center', paddingRight: 6 },
+  cellPrimary: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
+  cellSecondary: { fontSize: 11, color: '#9ca3af', marginTop: 1 },
+
+  emptyRow: { padding: 30, alignItems: 'center' },
+  emptyText: { fontSize: 15, color: '#9ca3af' },
 });
