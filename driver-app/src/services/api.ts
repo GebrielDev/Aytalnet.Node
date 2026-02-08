@@ -29,6 +29,7 @@ export const vehiclesApi = {
 
 export const tripsApi = {
   getActiveTrip: () => api.get('/trips/my-active'),
+  getMyTrips: () => api.get('/trips/my-trips'),
   start: (data: any) => api.post('/trips/start', data),
   end: (id: number, data: any) => api.put(`/trips/${id}/end`, data),
   uploadPhoto: (tripId: number, formData: FormData) =>

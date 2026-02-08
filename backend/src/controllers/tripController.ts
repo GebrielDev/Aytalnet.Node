@@ -198,6 +198,23 @@ export const getDriverActiveTrip = async (req: Request, res: Response): Promise<
   }
 };
 
+export const getDriverTrips = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const driver = req.driver!;
+    const trips = await Trip.findAll({
+      where: { driverId: driver.id, status: 'completed' },
+      include: [
+        { model: Vehicle, as: 'vehicle', attributes: ['id', 'plateNumber', 'make', 'model'] },
+      ],
+      order: [['endTime', 'DESC']],
+      limit: 10,
+    });
+    res.json(trips);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch driver trips' });
+  }
+};
+
 export const cancelTrip = async (req: Request, res: Response): Promise<void> => {
   try {
     const trip = await Trip.findByPk(req.params.id);
