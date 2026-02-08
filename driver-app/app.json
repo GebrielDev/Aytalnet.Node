@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Fleet Driver",
-    "slug": "fleet-driver-app",
+    "slug": "driverapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
