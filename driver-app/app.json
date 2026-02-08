@@ -37,7 +37,7 @@
     "extra": {
       "apiUrl": "https://aytalnet-production.up.railway.app/api",
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "d2207950-fd79-41c3-ba89-efb8931e2a0a"
       }
     }
   }
