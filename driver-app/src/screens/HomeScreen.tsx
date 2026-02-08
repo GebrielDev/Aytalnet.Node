@@ -11,40 +11,71 @@ export default function HomeScreen() {
   const [recentTrips, setRecentTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      let active = null;
-      let trips: any[] = [];
-      try { const r = await tripsApi.getActiveTrip(); active = r.data; } catch (e) { /* no active trip */ }
-      try { const r = await tripsApi.getMyTrips(); trips = Array.isArray(r.data) ? r.data : []; } catch (e) { /* endpoint may not exist yet */ }
-      setActiveTrip(active);
-      setRecentTrips(trips);
-    } catch (e) {
-      // never crash
-    } finally {
-      setLoading(false);
-    }
+  var loadData = function () {
+    setLoading(true);
+    var active: any = null;
+    var trips: any[] = [];
+
+    tripsApi.getActiveTrip()
+      .then(function (r: any) { active = r.data; })
+      .catch(function (_e: any) { /* no active trip */ })
+      .then(function () {
+        return tripsApi.getMyTrips()
+          .then(function (r: any) {
+            if (r && r.data && Array.isArray(r.data)) {
+              trips = r.data;
+            }
+          })
+          .catch(function (_e: any) { /* endpoint may not exist */ });
+      })
+      .then(function () {
+        setActiveTrip(active);
+        setRecentTrips(trips);
+        setLoading(false);
+      })
+      .catch(function (_e: any) {
+        setLoading(false);
+      });
   };
 
   useFocusEffect(
-    useCallback(() => {
+    useCallback(function onFocus() {
       loadData();
     }, [])
   );
 
-  const handleLogout = () => {
+  var handleLogout = function () {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Logout', onPress: logout, style: 'destructive' },
     ]);
   };
 
-  const fmtDate = (d: string) => {
-    try { return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return '-'; }
+  var fmtDate = function (d: string) {
+    try {
+      var dt = new Date(d);
+      var m = dt.getMonth() + 1;
+      var day = dt.getDate();
+      var y = dt.getFullYear();
+      return m + '/' + day + '/' + y;
+    } catch (_e) {
+      return '-';
+    }
   };
-  const fmtTime = (d: string) => {
-    try { return new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); } catch { return '-'; }
+
+  var fmtTime = function (d: string) {
+    try {
+      var dt = new Date(d);
+      var h = dt.getHours();
+      var min = dt.getMinutes();
+      var ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12;
+      if (h === 0) h = 12;
+      var minStr = min < 10 ? '0' + min : '' + min;
+      return h + ':' + minStr + ' ' + ampm;
+    } catch (_e) {
+      return '-';
+    }
   };
 
   if (loading) {
@@ -55,85 +86,105 @@ export default function HomeScreen() {
     );
   }
 
+  var driverName = 'Driver';
+  if (driver && driver.name) { driverName = driver.name; }
+  var driverId = '-';
+  if (driver && driver.employeeId) { driverId = driver.employeeId; }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
-      {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Hello, {driver?.name || 'Driver'}</Text>
-          <Text style={styles.sub}>ID: {driver?.employeeId || '\u2014'}</Text>
+          <Text style={styles.greeting}>{'Hello, ' + driverName}</Text>
+          <Text style={styles.sub}>{'ID: ' + driverId}</Text>
         </View>
         <TouchableOpacity onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Active trip banner */}
-      {activeTrip && (
+      {activeTrip ? (
         <TouchableOpacity
           style={styles.activeBanner}
-          onPress={() => navigation.navigate('ActiveTrip', { trip: activeTrip })}
+          onPress={function () { navigation.navigate('ActiveTrip', { trip: activeTrip }); }}
         >
           <View style={styles.activeDot} />
-          <View style={{ flex: 1 }}>
+          <View style={styles.bannerBody}>
             <Text style={styles.activeTitle}>Trip in Progress</Text>
-            <Text style={styles.activeSub}>{activeTrip.vehicle?.plateNumber || 'Vehicle'} \u2014 started {fmtTime(activeTrip.startTime)}</Text>
+            <Text style={styles.activeSub}>
+              {(activeTrip.vehicle && activeTrip.vehicle.plateNumber ? activeTrip.vehicle.plateNumber : 'Vehicle') + ' - started ' + fmtTime(activeTrip.startTime)}
+            </Text>
           </View>
-          <Text style={styles.activeArrow}>{'\u203A'}</Text>
         </TouchableOpacity>
-      )}
+      ) : null}
 
-      {/* New Trip button \u2014 always visible at top */}
       <TouchableOpacity
-        style={[styles.newTripBtn, activeTrip && styles.newTripBtnDisabled]}
-        onPress={() => { if (!activeTrip) navigation.navigate('StartTrip'); else Alert.alert('Active Trip', 'Please end your current trip first.'); }}
+        style={activeTrip ? styles.newTripBtnDisabled : styles.newTripBtn}
+        onPress={function () {
+          if (!activeTrip) {
+            navigation.navigate('StartTrip');
+          } else {
+            Alert.alert('Active Trip', 'Please end your current trip first.');
+          }
+        }}
       >
         <Text style={styles.newTripBtnText}>{activeTrip ? 'End Current Trip First' : '+ Start New Trip'}</Text>
       </TouchableOpacity>
 
-      {/* Completed Trips Table */}
       <Text style={styles.sectionTitle}>Completed Trips</Text>
 
       <View style={styles.table}>
-        {/* Table header */}
-        <View style={[styles.tableRow, styles.tableHeaderRow]}>
-          <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1.2 }]}>Date</Text>
-          <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1 }]}>Vehicle</Text>
-          <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 0.8 }]}>Duration</Text>
-          <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 0.8, textAlign: 'right' }]}>Miles</Text>
+        <View style={styles.tableHeaderRow}>
+          <Text style={styles.thDate}>Date</Text>
+          <Text style={styles.thVehicle}>Vehicle</Text>
+          <Text style={styles.thDur}>Duration</Text>
+          <Text style={styles.thMiles}>Miles</Text>
         </View>
 
         {recentTrips.length === 0 ? (
           <View style={styles.emptyRow}>
             <Text style={styles.emptyText}>No completed trips yet</Text>
           </View>
-        ) : (
-          recentTrips.map((t: any, i: number) => (
-            <View key={t.id} style={[styles.tableRow, i % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd]}>
-              <View style={[styles.tableCell, { flex: 1.2 }]}>
-                <Text style={styles.cellPrimary}>{fmtDate(t.endTime)}</Text>
-                <Text style={styles.cellSecondary}>{fmtTime(t.startTime)} \u2013 {fmtTime(t.endTime)}</Text>
+        ) : null}
+
+        {recentTrips.map(function (t: any, i: number) {
+          var plate = '-';
+          if (t.vehicle && t.vehicle.plateNumber) { plate = t.vehicle.plateNumber; }
+          var makeModel = '';
+          if (t.vehicle && t.vehicle.make) { makeModel = t.vehicle.make + ' ' + (t.vehicle.model || ''); }
+          var dur = '-';
+          if (t.durationMinutes != null) { dur = t.durationMinutes + ' min'; }
+          var miles = '-';
+          if (t.totalMileage != null) { miles = Number(t.totalMileage).toFixed(1); }
+
+          var rowStyle = i % 2 === 0 ? styles.rowEven : styles.rowOdd;
+          var key = t.id ? String(t.id) : String(i);
+
+          return (
+            <View key={key} style={rowStyle}>
+              <View style={styles.colDate}>
+                <Text style={styles.cellMain}>{fmtDate(t.endTime)}</Text>
+                <Text style={styles.cellSub}>{fmtTime(t.startTime) + ' - ' + fmtTime(t.endTime)}</Text>
               </View>
-              <View style={[styles.tableCell, { flex: 1 }]}>
-                <Text style={styles.cellPrimary}>{t.vehicle?.plateNumber || '\u2014'}</Text>
-                <Text style={styles.cellSecondary} numberOfLines={1}>{t.vehicle?.make ? t.vehicle.make + ' ' + t.vehicle.model : ''}</Text>
+              <View style={styles.colVehicle}>
+                <Text style={styles.cellMain}>{plate}</Text>
+                <Text style={styles.cellSub} numberOfLines={1}>{makeModel}</Text>
               </View>
-              <View style={[styles.tableCell, { flex: 0.8 }]}>
-                <Text style={styles.cellPrimary}>{t.durationMinutes != null ? t.durationMinutes + ' min' : '\u2014'}</Text>
+              <View style={styles.colDur}>
+                <Text style={styles.cellMain}>{dur}</Text>
               </View>
-              <View style={[styles.tableCell, { flex: 0.8, alignItems: 'flex-end' }]}>
-                <Text style={styles.cellPrimary}>{t.totalMileage != null ? t.totalMileage.toFixed(1) : '\u2014'}</Text>
-                <Text style={styles.cellSecondary}>{t.startOdometer}\u2192{t.endOdometer}</Text>
+              <View style={styles.colMiles}>
+                <Text style={styles.cellMain}>{miles}</Text>
               </View>
             </View>
-          ))
-        )}
+          );
+        })}
       </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+var styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6' },
   scroll: { padding: 16, paddingBottom: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6' },
@@ -145,25 +196,30 @@ const styles = StyleSheet.create({
 
   activeBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#86efac', borderRadius: 12, padding: 14, marginBottom: 14 },
   activeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e', marginRight: 12 },
+  bannerBody: { flex: 1 },
   activeTitle: { fontSize: 16, fontWeight: '700', color: '#166534' },
   activeSub: { fontSize: 13, color: '#15803d', marginTop: 2 },
-  activeArrow: { fontSize: 28, color: '#22c55e', fontWeight: '300' },
 
   newTripBtn: { backgroundColor: '#2563eb', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginBottom: 24 },
-  newTripBtnDisabled: { backgroundColor: '#93c5fd' },
+  newTripBtnDisabled: { backgroundColor: '#93c5fd', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginBottom: 24 },
   newTripBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 10 },
 
-  table: { backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
-  tableRow: { flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  tableHeaderRow: { backgroundColor: '#e5e7eb' },
-  tableHeaderText: { fontSize: 12, fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 },
-  tableRowEven: { backgroundColor: '#fff' },
-  tableRowOdd: { backgroundColor: '#f9fafb' },
-  tableCell: { justifyContent: 'center', paddingRight: 6 },
-  cellPrimary: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
-  cellSecondary: { fontSize: 11, color: '#9ca3af', marginTop: 1 },
+  table: { backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', elevation: 2 },
+  tableHeaderRow: { flexDirection: 'row', backgroundColor: '#e5e7eb', paddingVertical: 10, paddingHorizontal: 10 },
+  thDate: { flex: 1.2, fontSize: 11, fontWeight: '700', color: '#6b7280' },
+  thVehicle: { flex: 1, fontSize: 11, fontWeight: '700', color: '#6b7280' },
+  thDur: { flex: 0.7, fontSize: 11, fontWeight: '700', color: '#6b7280' },
+  thMiles: { flex: 0.6, fontSize: 11, fontWeight: '700', color: '#6b7280', textAlign: 'right' },
+  rowEven: { flexDirection: 'row', backgroundColor: '#fff', paddingVertical: 10, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  rowOdd: { flexDirection: 'row', backgroundColor: '#f9fafb', paddingVertical: 10, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  colDate: { flex: 1.2, paddingRight: 4 },
+  colVehicle: { flex: 1, paddingRight: 4 },
+  colDur: { flex: 0.7, justifyContent: 'center' },
+  colMiles: { flex: 0.6, alignItems: 'flex-end', justifyContent: 'center' },
+  cellMain: { fontSize: 13, fontWeight: '600', color: '#1f2937' },
+  cellSub: { fontSize: 10, color: '#9ca3af', marginTop: 1 },
 
   emptyRow: { padding: 30, alignItems: 'center' },
   emptyText: { fontSize: 15, color: '#9ca3af' },
