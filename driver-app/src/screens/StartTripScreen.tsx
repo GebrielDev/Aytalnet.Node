@@ -4,21 +4,19 @@ import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { vehiclesApi, tripsApi } from '../services/api';
-import { Picker } from '@react-native-picker/picker';
 
 export default function StartTripScreen() {
   const navigation = useNavigation<any>();
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [assignedVehicle, setAssignedVehicle] = useState<any>(null);
   const [odometer, setOdometer] = useState('');
   const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
   const [odometerPhoto, setOdometerPhoto] = useState<string | null>(null);
   const [passengerPhoto, setPassengerPhoto] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [loadingVehicle, setLoadingVehicle] = useState(true);
 
   useEffect(() => {
-    fetchVehicles();
+    fetchAssignedVehicle();
     requestPermissions();
   }, []);
 
@@ -27,14 +25,14 @@ export default function StartTripScreen() {
     await Location.requestForegroundPermissionsAsync();
   };
 
-  const fetchVehicles = async () => {
+  const fetchAssignedVehicle = async () => {
     try {
-      const res = await vehiclesApi.getAvailable();
-      setVehicles(res.data);
+      const res = await vehiclesApi.getMyAssigned();
+      setAssignedVehicle(res.data);
     } catch (error) {
-      Alert.alert('Error', 'Failed to fetch vehicles');
+      console.log('Failed to fetch assigned vehicle');
     } finally {
-      setLoadingVehicles(false);
+      setLoadingVehicle(false);
     }
   };
 
@@ -54,7 +52,7 @@ export default function StartTripScreen() {
   };
 
   const startTrip = async () => {
-    if (!selectedVehicle || !odometer || !selfiePhoto || !odometerPhoto) {
+    if (!assignedVehicle || !odometer || !selfiePhoto || !odometerPhoto) {
       Alert.alert('Error', 'Please complete all required fields');
       return;
     }
@@ -64,7 +62,7 @@ export default function StartTripScreen() {
       const location = await Location.getCurrentPositionAsync({});
 
       const tripRes = await tripsApi.start({
-        vehicleId: parseInt(selectedVehicle),
+        vehicleId: assignedVehicle.id,
         startOdometer: parseFloat(odometer),
         startLatitude: location.coords.latitude,
         startLongitude: location.coords.longitude,
@@ -94,7 +92,7 @@ export default function StartTripScreen() {
     }
   };
 
-  if (loadingVehicles) {
+  if (loadingVehicle) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
@@ -102,16 +100,26 @@ export default function StartTripScreen() {
     );
   }
 
+  if (!assignedVehicle) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.noVehicleTitle}>No Vehicle Assigned</Text>
+        <Text style={styles.noVehicleText}>
+          Please contact your dispatcher or admin to get a vehicle assigned to you.
+        </Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.sectionTitle}>Select Vehicle</Text>
-      <View style={styles.pickerContainer}>
-        <Picker selectedValue={selectedVehicle} onValueChange={setSelectedVehicle}>
-          <Picker.Item label="Select a vehicle..." value="" />
-          {vehicles.map((v) => (
-            <Picker.Item key={v.id} label={`${v.plateNumber} - ${v.make} ${v.model}`} value={v.id.toString()} />
-          ))}
-        </Picker>
+      <Text style={styles.sectionTitle}>Assigned Vehicle</Text>
+      <View style={styles.vehicleCard}>
+        <Text style={styles.vehiclePlate}>{assignedVehicle.plateNumber}</Text>
+        <Text style={styles.vehicleInfo}>{assignedVehicle.make} {assignedVehicle.model}</Text>
       </View>
 
       <Text style={styles.sectionTitle}>Odometer Reading</Text>
@@ -163,9 +171,15 @@ export default function StartTripScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6', padding: 20 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  noVehicleTitle: { fontSize: 22, fontWeight: 'bold', color: '#dc2626', marginBottom: 12 },
+  noVehicleText: { fontSize: 16, color: '#6b7280', textAlign: 'center', lineHeight: 24 },
+  backButton: { marginTop: 24, backgroundColor: '#2563eb', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 8 },
+  backButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#374151', marginTop: 15, marginBottom: 8 },
-  pickerContainer: { backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db' },
+  vehicleCard: { backgroundColor: '#eff6ff', borderWidth: 2, borderColor: '#2563eb', borderRadius: 8, padding: 15 },
+  vehiclePlate: { fontSize: 20, fontWeight: 'bold', color: '#1e40af' },
+  vehicleInfo: { fontSize: 14, color: '#3b82f6', marginTop: 4 },
   input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 15, fontSize: 16 },
   photoButton: { backgroundColor: '#fff', borderWidth: 2, borderColor: '#d1d5db', borderStyle: 'dashed', borderRadius: 8, height: 150, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   photoButtonText: { color: '#6b7280', fontSize: 16 },

@@ -10,6 +10,9 @@ Trip.belongsTo(Vehicle, { foreignKey: 'vehicleId', as: 'vehicle' });
 Driver.hasMany(Trip, { foreignKey: 'driverId', as: 'trips' });
 Vehicle.hasMany(Trip, { foreignKey: 'vehicleId', as: 'trips' });
 
+Driver.belongsTo(Vehicle, { foreignKey: 'assignedVehicleId', as: 'assignedVehicle' });
+Vehicle.hasOne(Driver, { foreignKey: 'assignedVehicleId', as: 'assignedDriver' });
+
 TripPhoto.belongsTo(Trip, { foreignKey: 'tripId', as: 'trip' });
 Trip.hasMany(TripPhoto, { foreignKey: 'tripId', as: 'photos' });
 

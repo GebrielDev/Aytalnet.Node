@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { driversApi } from '../services/api';
+import { driversApi, vehiclesApi } from '../services/api';
+
+interface Vehicle {
+  id: number;
+  plateNumber: string;
+  make: string;
+  model: string;
+}
 
 interface Driver {
   id: number;
@@ -9,10 +16,12 @@ interface Driver {
   phone: string;
   licenseNumber: string;
   status: string;
+  assignedVehicle?: Vehicle | null;
 }
 
 export default function Drivers() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
@@ -20,6 +29,7 @@ export default function Drivers() {
 
   useEffect(() => {
     fetchDrivers();
+    fetchVehicles();
   }, []);
 
   const fetchDrivers = async () => {
@@ -30,6 +40,15 @@ export default function Drivers() {
       console.error('Failed to fetch drivers');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchVehicles = async () => {
+    try {
+      const res = await vehiclesApi.getAll({ status: 'active' });
+      setVehicles(res.data);
+    } catch (error) {
+      console.error('Failed to fetch vehicles');
     }
   };
 
@@ -63,6 +82,24 @@ export default function Drivers() {
     }
   };
 
+  const handleAssignVehicle = async (driverId: number, vehicleId: string) => {
+    try {
+      await driversApi.assignVehicle(driverId, vehicleId ? parseInt(vehicleId) : null);
+      fetchDrivers();
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Failed to assign vehicle');
+    }
+  };
+
+  // Build set of vehicle IDs already assigned to other drivers
+  const getAssignedVehicleIds = (excludeDriverId: number) => {
+    return new Set(
+      drivers
+        .filter((d) => d.id !== excludeDriverId && d.assignedVehicle)
+        .map((d) => d.assignedVehicle!.id)
+    );
+  };
+
   if (loading) return <div className="text-center py-10">Loading...</div>;
 
   return (
@@ -85,17 +122,34 @@ export default function Drivers() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned Vehicle</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {drivers.map((driver) => (
+            {drivers.map((driver) => {
+              const assignedIds = getAssignedVehicleIds(driver.id);
+              return (
               <tr key={driver.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{driver.employeeId}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{driver.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{driver.phone}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <select
+                    value={driver.assignedVehicle?.id?.toString() || ''}
+                    onChange={(e) => handleAssignVehicle(driver.id, e.target.value)}
+                    className="border rounded-md px-2 py-1 text-sm"
+                  >
+                    <option value="">No vehicle</option>
+                    {vehicles.map((v) => (
+                      <option key={v.id} value={v.id.toString()} disabled={assignedIds.has(v.id)}>
+                        {v.plateNumber} - {v.make} {v.model}{assignedIds.has(v.id) ? ' (assigned)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 rounded-full text-xs ${driver.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     {driver.status}
@@ -106,7 +160,8 @@ export default function Drivers() {
                   <button onClick={() => handleDelete(driver.id)} className="text-red-600 hover:text-red-900">Deactivate</button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -11,12 +11,13 @@ interface DriverAttributes {
   phone: string;
   passwordHash: string;
   licenseNumber: string;
+  assignedVehicleId: number | null;
   status: 'active' | 'inactive';
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface DriverCreationAttributes extends Optional<DriverAttributes, 'id' | 'status' | 'createdAt' | 'updatedAt'> {}
+interface DriverCreationAttributes extends Optional<DriverAttributes, 'id' | 'status' | 'assignedVehicleId' | 'createdAt' | 'updatedAt'> {}
 
 class Driver extends Model<DriverAttributes, DriverCreationAttributes> implements DriverAttributes {
   public id!: number;
@@ -26,6 +27,7 @@ class Driver extends Model<DriverAttributes, DriverCreationAttributes> implement
   public phone!: string;
   public passwordHash!: string;
   public licenseNumber!: string;
+  public assignedVehicleId!: number | null;
   public status!: 'active' | 'inactive';
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -75,6 +77,16 @@ Driver.init(
       type: DataTypes.STRING(50),
       allowNull: false,
       field: 'license_number',
+    },
+    assignedVehicleId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: 'assigned_vehicle_id',
+      references: {
+        model: 'vehicles',
+        key: 'id',
+      },
     },
     status: {
       type: DataTypes.ENUM('active', 'inactive'),

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Driver, Trip } from '../models';
+import { Driver, Trip, Vehicle } from '../models';
 import { Op } from 'sequelize';
 
 export const getAllDrivers = async (req: Request, res: Response): Promise<void> => {
@@ -19,6 +19,7 @@ export const getAllDrivers = async (req: Request, res: Response): Promise<void> 
     const drivers = await Driver.findAll({
       where,
       attributes: { exclude: ['passwordHash'] },
+      include: [{ model: Vehicle, as: 'assignedVehicle', attributes: ['id', 'plateNumber', 'make', 'model'] }],
       order: [['createdAt', 'DESC']],
     });
     res.json(drivers);
@@ -116,5 +117,62 @@ export const deleteDriver = async (req: Request, res: Response): Promise<void> =
     res.json({ message: 'Driver deactivated' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to deactivate driver' });
+  }
+};
+
+export const assignVehicle = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const driver = await Driver.findByPk(req.params.id);
+    if (!driver) {
+      res.status(404).json({ error: 'Driver not found' });
+      return;
+    }
+
+    const { vehicleId } = req.body;
+
+    if (vehicleId) {
+      const vehicle = await Vehicle.findByPk(vehicleId);
+      if (!vehicle || vehicle.status !== 'active') {
+        res.status(400).json({ error: 'Vehicle not available' });
+        return;
+      }
+
+      // Check if vehicle is already assigned to another driver
+      const existingAssignment = await Driver.findOne({
+        where: { assignedVehicleId: vehicleId, id: { [Op.ne]: driver.id } },
+      });
+      if (existingAssignment) {
+        res.status(400).json({ error: `Vehicle already assigned to ${existingAssignment.name}` });
+        return;
+      }
+    }
+
+    await driver.update({ assignedVehicleId: vehicleId || null });
+
+    const updated = await Driver.findByPk(driver.id, {
+      attributes: { exclude: ['passwordHash'] },
+      include: [{ model: Vehicle, as: 'assignedVehicle', attributes: ['id', 'plateNumber', 'make', 'model'] }],
+    });
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to assign vehicle' });
+  }
+};
+
+export const getMyAssignedVehicle = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const driver = await Driver.findByPk(req.driver!.id, {
+      include: [{ model: Vehicle, as: 'assignedVehicle' }],
+    });
+
+    if (!driver || !driver.assignedVehicleId) {
+      res.json(null);
+      return;
+    }
+
+    res.json((driver as any).assignedVehicle);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch assigned vehicle' });
   }
 };

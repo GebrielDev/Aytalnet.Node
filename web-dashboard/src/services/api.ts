@@ -38,6 +38,7 @@ export const driversApi = {
   create: (data: any) => api.post('/drivers', data),
   update: (id: number, data: any) => api.put(`/drivers/${id}`, data),
   delete: (id: number) => api.delete(`/drivers/${id}`),
+  assignVehicle: (id: number, vehicleId: number | null) => api.put(`/drivers/${id}/assign-vehicle`, { vehicleId }),
 };
 
 export const vehiclesApi = {
