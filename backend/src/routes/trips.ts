@@ -1,16 +1,9 @@
 import { Router } from 'express';
 import { getAllTrips, getActiveTrips, getTripById, startTrip, endTrip, uploadTripPhoto, getDriverActiveTrip, getDriverTrips, cancelTrip } from '../controllers/tripController';
 import { authenticateToken, requireUser, requireDriver } from '../middleware/auth';
-import multer from 'multer';
+import { upload } from '../config/cloudinary';
 
 const router = Router();
-
-// Multer for handling file uploads (Cloudinary or local)
-const storage = multer.diskStorage({
-  destination: './uploads',
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
-});
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Driver routes
 router.post('/start', authenticateToken, requireDriver, startTrip);

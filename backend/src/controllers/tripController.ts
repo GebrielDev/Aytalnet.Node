@@ -173,10 +173,13 @@ export const uploadTripPhoto = async (req: Request, res: Response): Promise<void
       return;
     }
 
+    // multer-storage-cloudinary puts the URL in file.path
+    const photoUrl = (file as any).path || (file as any).secure_url || (file as any).url || '';
+
     const photo = await TripPhoto.create({
       tripId: trip.id,
       photoType,
-      photoUrl: file.path || '',
+      photoUrl,
       takenAt: new Date(),
     });
 
