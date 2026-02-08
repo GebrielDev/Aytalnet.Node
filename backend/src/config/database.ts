@@ -29,7 +29,18 @@ export const connectDatabase = async (): Promise<void> => {
     await sequelize.authenticate();
     console.log('Database connected successfully');
 
-    await sequelize.sync({ alter: true });
+    // Add assigned_vehicle_id column if it doesn't exist
+    try {
+      await sequelize.query(`
+        ALTER TABLE drivers ADD COLUMN IF NOT EXISTS assigned_vehicle_id INTEGER
+        REFERENCES vehicles(id) ON DELETE SET NULL;
+      `);
+      console.log('Migration: assigned_vehicle_id column ensured');
+    } catch (migrationError) {
+      console.log('Migration note:', (migrationError as Error).message);
+    }
+
+    await sequelize.sync();
     console.log('Database models synchronized');
   } catch (error) {
     console.error('Database connection failed:', error);
