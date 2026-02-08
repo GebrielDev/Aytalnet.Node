@@ -1,9 +1,11 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// For mobile testing, replace 'localhost' with your computer's IP address
-// Find your IP: Windows: ipconfig | Mac/Linux: ifconfig
-const API_URL = 'http://192.168.1.100:3001/api'; // Change to your IP for mobile testing
+// Use environment variable or default to production URL
+const API_URL = Constants.expoConfig?.extra?.apiUrl || 
+  process.env.EXPO_PUBLIC_API_URL || 
+  'https://aytalnet-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_URL,

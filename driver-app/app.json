@@ -33,6 +33,12 @@
         "expo-location",
         { "locationWhenInUsePermission": "Allow Fleet Driver to access your location." }
       ]
-    ]
+    ],
+    "extra": {
+      "apiUrl": "https://aytalnet-production.up.railway.app/api",
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
   }
 }
