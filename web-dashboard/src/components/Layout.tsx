@@ -8,6 +8,7 @@ const navItems = [
   { path: '/drivers', label: 'Drivers', icon: '👤' },
   { path: '/vehicles', label: 'Vehicles', icon: '🚐' },
   { path: '/reports', label: 'Reports', icon: '📈' },
+  { path: '/users', label: 'Users', icon: '🔑' },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
