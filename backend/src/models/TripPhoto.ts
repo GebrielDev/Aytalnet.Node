@@ -39,7 +39,7 @@ TripPhoto.init(
       field: 'photo_type',
     },
     photoUrl: {
-      type: DataTypes.STRING(500),
+      type: DataTypes.TEXT,
       allowNull: false,
       field: 'photo_url',
     },

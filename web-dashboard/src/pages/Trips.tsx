@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { tripsApi } from '../services/api';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Derive backend base URL (strip /api suffix)
+const BACKEND_URL = API_URL.replace(/\/api\/?$/, '');
+
+// Resolve photo URLs: full URLs and data URIs pass through; relative paths get backend URL prepended
+function resolvePhotoUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  // Relative path like "uploads/123-photo.jpg" -> full backend URL
+  return `${BACKEND_URL}/${url}`;
+}
+
 interface Trip {
   id: number;
   status: string;
@@ -142,7 +154,7 @@ export default function Trips() {
                 <div className="grid grid-cols-2 gap-2">
                   {selectedTrip.photos.map((photo) => (
                     <div key={photo.id} className="border rounded p-2">
-                      <img src={photo.photoUrl} alt={photo.photoType} className="w-full h-32 object-cover rounded" />
+                      <img src={resolvePhotoUrl(photo.photoUrl)} alt={photo.photoType} className="w-full h-32 object-cover rounded" />
                       <p className="text-sm text-gray-500 mt-1">{photo.photoType.replace('_', ' ')}</p>
                     </div>
                   ))}

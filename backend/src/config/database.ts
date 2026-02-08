@@ -40,6 +40,16 @@ export const connectDatabase = async (): Promise<void> => {
       console.log('Migration note:', (migrationError as Error).message);
     }
 
+    // Change photo_url from VARCHAR(500) to TEXT to support base64 data URIs
+    try {
+      await sequelize.query(`
+        ALTER TABLE trip_photos ALTER COLUMN photo_url TYPE TEXT;
+      `);
+      console.log('Migration: photo_url column changed to TEXT');
+    } catch (migrationError) {
+      console.log('Migration note:', (migrationError as Error).message);
+    }
+
     await sequelize.sync();
     console.log('Database models synchronized');
   } catch (error) {

@@ -1,6 +1,21 @@
 import { Request, Response } from 'express';
 import { Trip, TripPhoto, Driver, Vehicle } from '../models';
 import { Op } from 'sequelize';
+import cloudinary from '../config/cloudinary';
+
+// Upload buffer to Cloudinary, returns the secure URL
+const uploadBufferToCloudinary = (buffer: Buffer, mimetype: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'fleet-management/trips', resource_type: 'image' },
+      (error, result) => {
+        if (error || !result) return reject(error || new Error('No result'));
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
+  });
+};
 
 export const getAllTrips = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -160,7 +175,7 @@ export const endTrip = async (req: Request, res: Response): Promise<void> => {
 export const uploadTripPhoto = async (req: Request, res: Response): Promise<void> => {
   try {
     const { photoType } = req.body;
-    const file = req.file as Express.Multer.File & { path?: string };
+    const file = req.file;
 
     if (!file) {
       res.status(400).json({ error: 'No photo uploaded' });
@@ -173,8 +188,15 @@ export const uploadTripPhoto = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    // multer-storage-cloudinary puts the URL in file.path
-    const photoUrl = (file as any).path || (file as any).secure_url || (file as any).url || '';
+    let photoUrl: string;
+    try {
+      // Try Cloudinary upload from memory buffer
+      photoUrl = await uploadBufferToCloudinary(file.buffer, file.mimetype);
+    } catch (_cloudErr) {
+      // Fallback: store as base64 data URI (works without any external service)
+      const base64 = file.buffer.toString('base64');
+      photoUrl = `data:${file.mimetype};base64,${base64}`;
+    }
 
     const photo = await TripPhoto.create({
       tripId: trip.id,

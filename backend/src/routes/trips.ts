@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { getAllTrips, getActiveTrips, getTripById, startTrip, endTrip, uploadTripPhoto, getDriverActiveTrip, getDriverTrips, cancelTrip } from '../controllers/tripController';
 import { authenticateToken, requireUser, requireDriver } from '../middleware/auth';
-import { upload } from '../config/cloudinary';
+import multer from 'multer';
 
 const router = Router();
+
+// Use memory storage so file buffer is available for Cloudinary or base64 fallback
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Driver routes
 router.post('/start', authenticateToken, requireDriver, startTrip);
