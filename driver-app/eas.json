@@ -6,6 +6,7 @@
   "build": {
     "dev": {
       "distribution": "internal",
+      "node": "18.18.0",
       "android": {
         "buildType": "apk"
       },
