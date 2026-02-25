@@ -175,3 +175,4 @@ For the mobile app:
 ## License
 
 MIT
+### By: Gebriel D.
