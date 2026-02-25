@@ -4,7 +4,7 @@ import sequelize from '../config/database';
 interface TripPhotoAttributes {
   id: number;
   tripId: number;
-  photoType: 'driver_selfie' | 'start_odometer' | 'end_odometer' | 'passenger';
+  photoType: 'driver_selfie' | 'start_odometer' | 'end_odometer' | 'passenger' | 'license_plate';
   photoUrl: string;
   takenAt: Date;
   createdAt?: Date;
@@ -15,7 +15,7 @@ interface TripPhotoCreationAttributes extends Optional<TripPhotoAttributes, 'id'
 class TripPhoto extends Model<TripPhotoAttributes, TripPhotoCreationAttributes> implements TripPhotoAttributes {
   public id!: number;
   public tripId!: number;
-  public photoType!: 'driver_selfie' | 'start_odometer' | 'end_odometer' | 'passenger';
+  public photoType!: 'driver_selfie' | 'start_odometer' | 'end_odometer' | 'passenger' | 'license_plate';
   public photoUrl!: string;
   public takenAt!: Date;
   public readonly createdAt!: Date;
@@ -34,7 +34,7 @@ TripPhoto.init(
       field: 'trip_id',
     },
     photoType: {
-      type: DataTypes.ENUM('driver_selfie', 'start_odometer', 'end_odometer', 'passenger'),
+      type: DataTypes.ENUM('driver_selfie', 'start_odometer', 'end_odometer', 'passenger', 'license_plate'),
       allowNull: false,
       field: 'photo_type',
     },

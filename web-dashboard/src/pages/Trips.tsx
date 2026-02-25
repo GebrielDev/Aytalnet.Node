@@ -167,7 +167,7 @@ export default function Trips() {
                           );
                         }}
                       />
-                      <p className="text-sm text-gray-500 mt-1">{photo.photoType.replace('_', ' ')}</p>
+                      <p className="text-sm text-gray-500 mt-1 capitalize">{photo.photoType.replace(/_/g, ' ')}</p>
                     </div>
                   ))}
                 </div>

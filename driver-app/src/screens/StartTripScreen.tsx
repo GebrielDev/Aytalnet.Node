@@ -9,6 +9,7 @@ export default function StartTripScreen() {
   const navigation = useNavigation<any>();
   const [assignedVehicle, setAssignedVehicle] = useState<any>(null);
   const [odometer, setOdometer] = useState('');
+  const [licensePlatePhoto, setLicensePlatePhoto] = useState<string | null>(null);
   const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
   const [odometerPhoto, setOdometerPhoto] = useState<string | null>(null);
   const [passengerPhoto, setPassengerPhoto] = useState<string | null>(null);
@@ -36,7 +37,7 @@ export default function StartTripScreen() {
     }
   };
 
-  const takePhoto = async (type: 'selfie' | 'odometer' | 'passenger') => {
+  const takePhoto = async (type: 'license_plate' | 'selfie' | 'odometer' | 'passenger') => {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
@@ -45,14 +46,15 @@ export default function StartTripScreen() {
 
     if (!result.canceled) {
       const uri = result.assets[0].uri;
-      if (type === 'selfie') setSelfiePhoto(uri);
+      if (type === 'license_plate') setLicensePlatePhoto(uri);
+      else if (type === 'selfie') setSelfiePhoto(uri);
       else if (type === 'odometer') setOdometerPhoto(uri);
       else setPassengerPhoto(uri);
     }
   };
 
   const startTrip = async () => {
-    if (!assignedVehicle || !odometer || !selfiePhoto || !odometerPhoto) {
+    if (!assignedVehicle || !odometer || !licensePlatePhoto || !selfiePhoto || !odometerPhoto) {
       Alert.alert('Error', 'Please complete all required fields');
       return;
     }
@@ -78,6 +80,7 @@ export default function StartTripScreen() {
         await tripsApi.uploadPhoto(tripId, formData);
       };
 
+      await uploadPhoto(licensePlatePhoto, 'license_plate');
       await uploadPhoto(selfiePhoto, 'driver_selfie');
       await uploadPhoto(odometerPhoto, 'start_odometer');
       if (passengerPhoto) {
@@ -121,6 +124,15 @@ export default function StartTripScreen() {
         <Text style={styles.vehiclePlate}>{assignedVehicle.plateNumber}</Text>
         <Text style={styles.vehicleInfo}>{assignedVehicle.make} {assignedVehicle.model}</Text>
       </View>
+
+      <Text style={styles.sectionTitle}>License Plate Photo *</Text>
+      <TouchableOpacity style={styles.photoButton} onPress={() => takePhoto('license_plate')}>
+        {licensePlatePhoto ? (
+          <Image source={{ uri: licensePlatePhoto }} style={styles.photoPreview} />
+        ) : (
+          <Text style={styles.photoButtonText}>Take Photo of License Plate</Text>
+        )}
+      </TouchableOpacity>
 
       <Text style={styles.sectionTitle}>Odometer Reading</Text>
       <TextInput
