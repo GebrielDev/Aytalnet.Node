@@ -30,6 +30,8 @@ api.interceptors.response.use(
 export const authApi = {
   login: (email: string, password: string) => api.post('/auth/login', { email, password }),
   getMe: () => api.get('/auth/me'),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email, type: 'user' }),
+  resetPassword: (token: string, password: string) => api.post('/auth/reset-password', { token, password }),
 };
 
 export const driversApi = {

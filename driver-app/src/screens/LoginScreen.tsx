@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen() {
@@ -7,6 +8,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const navigation = useNavigation<any>();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -54,6 +56,9 @@ export default function LoginScreen() {
             <Text style={styles.buttonText}>Sign In</Text>
           )}
         </TouchableOpacity>
+        <TouchableOpacity style={styles.forgotButton} onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.forgotText}>Forgot your password?</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -68,4 +73,6 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 15, marginBottom: 15, fontSize: 16 },
   button: { backgroundColor: '#2563eb', padding: 15, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  forgotButton: { alignItems: 'center', marginTop: 15 },
+  forgotText: { color: '#2563eb', fontSize: 14, fontWeight: '500' },
 });

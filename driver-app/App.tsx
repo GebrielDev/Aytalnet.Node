@@ -3,6 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen from './src/screens/LoginScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import StartTripScreen from './src/screens/StartTripScreen';
 import ActiveTripScreen from './src/screens/ActiveTripScreen';
@@ -20,7 +22,11 @@ function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: '#2563EB' }, headerTintColor: '#fff' }}>
       {!driver ? (
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: 'Forgot Password', headerStyle: { backgroundColor: '#2563EB' }, headerTintColor: '#fff' }} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: 'Reset Password', headerStyle: { backgroundColor: '#2563EB' }, headerTintColor: '#fff' }} />
+        </>
       ) : (
         <>
           <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Fleet Driver' }} />
