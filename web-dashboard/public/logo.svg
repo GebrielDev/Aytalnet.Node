@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <!-- Outer swoosh/orbit -->
+  <ellipse cx="200" cy="170" rx="185" ry="120" stroke="#1e3a6e" stroke-width="14" fill="none" transform="rotate(-8 200 170)"/>
+  <!-- Star/sparkle at top right -->
+  <g transform="translate(310, 55)">
+    <line x1="0" y1="-14" x2="0" y2="14" stroke="#1e3a6e" stroke-width="4"/>
+    <line x1="-14" y1="0" x2="14" y2="0" stroke="#1e3a6e" stroke-width="4"/>
+    <line x1="-8" y1="-8" x2="8" y2="8" stroke="#1e3a6e" stroke-width="2.5"/>
+    <line x1="8" y1="-8" x2="-8" y2="8" stroke="#1e3a6e" stroke-width="2.5"/>
+  </g>
+  <!-- Letter S (left) -->
+  <text x="58" y="235" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="190" fill="#1e3a6e" letter-spacing="-5">S</text>
+  <!-- Letter T (center, gray) -->
+  <text x="140" y="235" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="190" fill="#8a8f96" letter-spacing="-5">T</text>
+  <!-- Letter S (right) -->
+  <text x="228" y="235" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="190" fill="#1e3a6e" letter-spacing="-5">S</text>
+</svg>

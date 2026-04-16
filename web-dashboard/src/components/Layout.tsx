@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold text-blue-600">Fleet Manager</span>
+                <img src="/logo.svg" alt="STS" className="h-10 w-auto" />
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-4">
                 {navItems.map((item) => (

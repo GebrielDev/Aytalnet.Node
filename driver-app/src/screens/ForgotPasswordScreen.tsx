@@ -34,6 +34,11 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoS}>S</Text>
+          <Text style={styles.logoT}>T</Text>
+          <Text style={styles.logoS}>S</Text>
+        </View>
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>Enter your email to reset your password</Text>
       </View>
@@ -88,7 +93,10 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6', justifyContent: 'center', padding: 20 },
   header: { alignItems: 'center', marginBottom: 40 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#2563eb' },
+  logoContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  logoS: { fontSize: 44, fontWeight: '900', color: '#1e3a6e' },
+  logoT: { fontSize: 44, fontWeight: '900', color: '#8a8f96' },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#2563eb' },
   subtitle: { fontSize: 14, color: '#6b7280', marginTop: 8, textAlign: 'center' },
   form: { backgroundColor: '#fff', borderRadius: 12, padding: 20, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
   input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 15, marginBottom: 15, fontSize: 16 },
