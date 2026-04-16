@@ -42,6 +42,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Email"
+          placeholderTextColor="rgba(255,255,255,0.35)"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -50,6 +51,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Password"
+          placeholderTextColor="rgba(255,255,255,0.35)"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -70,17 +72,17 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6', justifyContent: 'center', padding: 20 },
+  container: { flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', padding: 24 },
   header: { alignItems: 'center', marginBottom: 40 },
-  logoContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  logoS: { fontSize: 48, fontWeight: '900', color: '#1e3a6e' },
-  logoT: { fontSize: 48, fontWeight: '900', color: '#8a8f96' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#2563eb' },
-  subtitle: { fontSize: 16, color: '#6b7280', marginTop: 8 },
-  form: { backgroundColor: '#fff', borderRadius: 12, padding: 20, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 15, marginBottom: 15, fontSize: 16 },
-  button: { backgroundColor: '#2563eb', padding: 15, borderRadius: 8, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  forgotButton: { alignItems: 'center', marginTop: 15 },
-  forgotText: { color: '#2563eb', fontSize: 14, fontWeight: '500' },
+  logoContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  logoS: { fontSize: 52, fontWeight: '900', color: '#60a5fa', letterSpacing: 2 },
+  logoT: { fontSize: 52, fontWeight: '900', color: '#94a3b8', letterSpacing: 2 },
+  title: { fontSize: 26, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
+  subtitle: { fontSize: 15, color: '#94a3b8', marginTop: 8 },
+  form: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  input: { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: 16, marginBottom: 14, fontSize: 16, color: '#fff' },
+  button: { backgroundColor: '#2563eb', padding: 16, borderRadius: 12, alignItems: 'center', shadowColor: '#2563eb', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  buttonText: { color: '#fff', fontSize: 17, fontWeight: '700', letterSpacing: 0.5 },
+  forgotButton: { alignItems: 'center', marginTop: 18 },
+  forgotText: { color: '#60a5fa', fontSize: 14, fontWeight: '500' },
 });
