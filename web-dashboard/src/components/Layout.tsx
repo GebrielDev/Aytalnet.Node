@@ -52,7 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b border-gray-200">
-            <img src="/logo.svg" alt="STS" className="h-9 w-auto" />
+            <img src="/logo.png" alt="STS" className="h-9 w-auto" />
             <span className="ml-3 text-lg font-semibold text-gray-800">Fleet Manager</span>
           </div>
 

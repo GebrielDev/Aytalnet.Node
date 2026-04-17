@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { authApi } from '../services/api';
 
@@ -34,11 +34,7 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoS}>S</Text>
-          <Text style={styles.logoT}>T</Text>
-          <Text style={styles.logoS}>S</Text>
-        </View>
+        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>Enter your email to reset your password</Text>
       </View>
@@ -94,9 +90,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', padding: 24 },
   header: { alignItems: 'center', marginBottom: 40 },
-  logoContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  logoS: { fontSize: 48, fontWeight: '900', color: '#60a5fa', letterSpacing: 2 },
-  logoT: { fontSize: 48, fontWeight: '900', color: '#94a3b8', letterSpacing: 2 },
+  logo: { width: 100, height: 100, marginBottom: 12 },
   title: { fontSize: 26, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
   subtitle: { fontSize: 14, color: '#94a3b8', marginTop: 8, textAlign: 'center' },
   form: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },

@@ -27,7 +27,7 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="STS" className="h-16 w-auto mx-auto mb-4" />
+          <img src="/logo.png" alt="STS" className="h-16 w-auto mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white">Forgot Password</h2>
           <p className="text-sm text-blue-200/60 mt-1">Enter your email and we'll send you a reset link.</p>
         </div>
