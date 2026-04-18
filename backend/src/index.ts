@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
+import path from 'path';
+import fs from 'fs';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import { connectDatabase } from './config/database';
@@ -41,6 +43,18 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', routes);
+
+// Serve web dashboard static files when available
+const dashboardPath = path.join(__dirname, '../../web-dashboard/dist');
+if (fs.existsSync(dashboardPath)) {
+  app.use(express.static(dashboardPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(dashboardPath, 'index.html'));
+  });
+}
 
 // Error handling
 app.use(notFound);

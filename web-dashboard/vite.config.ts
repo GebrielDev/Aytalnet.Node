@@ -7,8 +7,11 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   server: {
-    port: 5180,
+    port: parseInt(process.env.PORT || '5180'),
     strictPort: true,
+  },
+  preview: {
+    port: parseInt(process.env.PORT || '5180'),
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
