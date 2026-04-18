@@ -8,14 +8,8 @@ if (!process.env.DATABASE_URL) {
 }
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: 'postgres',
+  dialect: 'mysql',
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
-  dialectOptions: {
-    ssl: process.env.NODE_ENV === 'production' ? {
-      require: true,
-      rejectUnauthorized: false,
-    } : false,
-  },
   pool: {
     max: 10,
     min: 0,
@@ -31,10 +25,14 @@ export const connectDatabase = async (): Promise<void> => {
 
     // Add assigned_vehicle_id column if it doesn't exist
     try {
-      await sequelize.query(`
-        ALTER TABLE drivers ADD COLUMN IF NOT EXISTS assigned_vehicle_id INTEGER
-        REFERENCES vehicles(id) ON DELETE SET NULL;
-      `);
+      const [columns] = await sequelize.query(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'drivers' AND COLUMN_NAME = 'assigned_vehicle_id' AND TABLE_SCHEMA = DATABASE()"
+      );
+      if ((columns as any[]).length === 0) {
+        await sequelize.query(
+          'ALTER TABLE drivers ADD COLUMN assigned_vehicle_id INTEGER, ADD CONSTRAINT fk_driver_vehicle FOREIGN KEY (assigned_vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL'
+        );
+      }
       console.log('Migration: assigned_vehicle_id column ensured');
     } catch (migrationError) {
       console.log('Migration note:', (migrationError as Error).message);
@@ -42,9 +40,9 @@ export const connectDatabase = async (): Promise<void> => {
 
     // Change photo_url from VARCHAR(500) to TEXT to support base64 data URIs
     try {
-      await sequelize.query(`
-        ALTER TABLE trip_photos ALTER COLUMN photo_url TYPE TEXT;
-      `);
+      await sequelize.query(
+        'ALTER TABLE trip_photos MODIFY COLUMN photo_url TEXT'
+      );
       console.log('Migration: photo_url column changed to TEXT');
     } catch (migrationError) {
       console.log('Migration note:', (migrationError as Error).message);
